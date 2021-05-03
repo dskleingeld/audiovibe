@@ -1,7 +1,18 @@
+from dataclasses import dataclass
+import warnings
 import librosa
 import numpy as np
 
 
-def load(path: str) -> np.ndarray:
-    (samples, _) = librosa.load(path, sr=441000, mono=True)
-    return samples
+@dataclass
+class Samples():
+    data: np.ndarray
+    rate: int
+
+    @staticmethod
+    def from_path(path: str) -> np.ndarray:
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message="PySoundFile")
+            (data, rate) = librosa.load(path, sr=441000, mono=True)
+        return Samples(data, rate)

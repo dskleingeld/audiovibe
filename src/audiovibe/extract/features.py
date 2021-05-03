@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 import numpy as np
-import extract
+from .preprocessing import Samples
+from . import analyze
 
 
 @dataclass
 class Features:
-    pitch: float
+    pitch: float  # fundamental fequency over entire sample song
     spectral_rolloff: float
     mel_freq: float
     cepstral_coeff: float
@@ -18,9 +19,9 @@ class Features:
     kurtosis: float
 
     @staticmethod
-    def from_samples(samples: np.ndarray):
+    def from_samples(samples: Samples):
         return Features(
-            pitch=extract.pitch(samples),
+            pitch=analyze.pitch(samples),
             spectral_rolloff=0,
             mel_freq=0,
             cepstral_coeff=0,
