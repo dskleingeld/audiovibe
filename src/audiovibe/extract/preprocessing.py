@@ -11,8 +11,7 @@ class Samples():
 
     @staticmethod
     def from_path(path: str) -> np.ndarray:
-
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", message="PySoundFile")
-            (data, rate) = librosa.load(path, sr=441000, mono=True)
+            (data, rate) = librosa.load(path, sr=44100, mono=True)
         return Samples(data, rate)
