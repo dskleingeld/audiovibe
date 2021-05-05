@@ -140,3 +140,4 @@ docs
 *.mp3
 *.csv
 data/
+models_tried/

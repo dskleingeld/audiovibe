@@ -26,7 +26,7 @@ def index(db: Database, dir: str, max_workers=None):
         max workers to limit number of workers used (default cpu_count() + 4)
     """
 
-    extensions = [".mp3", ".wav"]
+    extensions = [".mp3", ".wav", ".m4a"]
     patterns = [dir+"/*"+ext for ext in extensions]
     paths = []
     for p in patterns:
@@ -37,6 +37,7 @@ def index(db: Database, dir: str, max_workers=None):
         db.insert(name, row)
 
 
+# better dataset: https://cvml.unige.ch/databases/DEAM/
 def add_emotion_from_csv(db: Database, csv: str):
     """expects csv with columns: song_id,mean_arousal,
        std_arousal,mean_valence,std_valence"""

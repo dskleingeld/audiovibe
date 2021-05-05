@@ -2,6 +2,7 @@ from contextlib import redirect_stdout
 from tensorflow import keras
 from tensorflow.keras import layers
 from glob import glob
+from tqdm import tqdm
 from matplotlib import pyplot as plt
 from typing import List
 from loguru import logger
@@ -19,7 +20,6 @@ def build_model():
         layers.BatchNormalization(),
         layers.Dense(10, activation="relu"),
         layers.Dense(10, activation="relu"),
-        layers.Dense(10, activation="relu"),
         layers.Dense(5, activation="relu"),
         layers.Dense(2, activation="linear"),
     ])
@@ -33,6 +33,7 @@ def build_model():
 
 def prepare_data(data: List[Row]):
     TRAIN_FRACTION = 0.8
+    random.seed(0)  # need repeatability to compare nn
     needed = int(len(data)*TRAIN_FRACTION)
     train_idxs = random.sample(range(0, len(data)), needed)
     train_idxs.sort(reverse=True)
@@ -76,6 +77,7 @@ def store_model_info(model, hist):
     dir = "models_tried"
     numb = next_file_numb(dir)
     plot(hist.history, path=dir+f"/loss{numb}.png")
+    model.save(dir+f"/model{numb}.tf")
 
     with open(dir+f"/model{numb}.txt", "w") as f:
         with redirect_stdout(f):
@@ -85,11 +87,21 @@ def store_model_info(model, hist):
 def train(db: Database):
     data = db.get_with_emotion()
     train_in, train_out, val_in, val_out = prepare_data(data)
-
-    model = build_model()
     logger.info(f"training on: {len(train_in)} samples")
-    hist = model.fit(train_in, train_out, epochs=80, verbose=0,
-                     validation_data=(val_in, val_out))
 
-    store_model_info(model, hist)
-    logger.info(f"best loss reached: {hist.history['val_loss'][-1]}")
+    TRIES = 10
+    best_loss = 9999
+    best_model = None
+    best_hist = None
+    for i in tqdm(range(0, TRIES)):
+        model = build_model()
+        hist = model.fit(train_in, train_out, epochs=100, verbose=0,
+                         validation_data=(val_in, val_out))
+        loss = hist.history['val_loss'][-1]
+        if loss < best_loss:
+            best_loss = loss
+            best_model = model
+            best_hist = hist
+
+    store_model_info(best_model, best_hist)
+    logger.info(f"best loss reached: {best_loss}")

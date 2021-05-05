@@ -12,3 +12,7 @@ class Emotion:
     @staticmethod
     def empty(placeholder=0):
         return Emotion(placeholder, placeholder)
+
+    def as_word(self) -> str:
+        #TODO
+        return "todo"
