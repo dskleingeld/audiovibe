@@ -19,14 +19,13 @@ class Row:
 
     @staticmethod
     def deserializable(data: str):
-        print(data)
         fields = data.split(",")
         floats = [float(e) for e in fields]
         features = Features(*floats[:10])
 
         emotion = None
         if len(floats) > 10:
-            emotion = Emotion(floats[10])
+            emotion = Emotion(floats[10], floats[11])
         return Row(features, emotion)
 
     def serializable(self) -> str:
@@ -48,7 +47,6 @@ class Database:
             logger.info(f"creating new database in: {path}")
 
         db = pickledb.load(path, True)
-        print(type(db))
         return Database(db)
 
     def insert(self, key: str, value: Row):
@@ -74,7 +72,7 @@ class Database:
     def get_with_emotion(self) -> List[Row]:
         list = []
         for key in self.db.getall():
-            row = self.db.get(key)
+            row = self.get(key)
             if row.emotion is None:
                 continue
             list.append(row)

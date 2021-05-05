@@ -2,6 +2,7 @@ from typing import List
 from dataclasses import dataclass
 from .preprocessing import Samples
 from . import analyze
+from loguru import logger
 
 
 @dataclass
@@ -34,18 +35,18 @@ class Features:
         )
 
     @staticmethod
-    def empty():
+    def empty(placeholder=0):
         return Features(
-            pitch=0,
-            spectral_rolloff=0,
-            mel_freq_c_coeff=0,
-            tempo=0,
-            rms_eng=0,
-            spect_centr=0,
-            beat_spec=0,
-            zero_crossing=0,
-            short_fft=0,
-            kurtosis=0,
+            pitch=placeholder,
+            spectral_rolloff=placeholder,
+            mel_freq_c_coeff=placeholder,
+            tempo=placeholder,
+            rms_eng=placeholder,
+            spect_centr=placeholder,
+            beat_spec=placeholder,
+            zero_crossing=placeholder,
+            short_fft=placeholder,
+            kurtosis=placeholder,
         )
 
     def as_list(self) -> List[float]:
