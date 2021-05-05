@@ -1,3 +1,4 @@
+from typing import List
 from dataclasses import dataclass
 from .preprocessing import Samples
 from . import analyze
@@ -33,7 +34,7 @@ class Features:
         )
 
     @staticmethod
-    def for_testing():
+    def empty():
         return Features(
             pitch=0,
             spectral_rolloff=0,
@@ -46,3 +47,15 @@ class Features:
             short_fft=0,
             kurtosis=0,
         )
+
+    def as_list(self) -> List[float]:
+        return [self.pitch,
+                self.spectral_rolloff,
+                self.mel_freq_c_coeff,
+                self.tempo,
+                self.rms_eng,
+                self.spect_centr,
+                self.beat_spec,
+                self.zero_crossing,
+                self.short_fft,
+                self.kurtosis]

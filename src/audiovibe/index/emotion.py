@@ -1,2 +1,10 @@
+from dataclasses import dataclass
+
+
+@dataclass
 class Emotion:
-    test: float
+    arousal: float
+    valence: float
+
+    def as_list(self):
+        return [self.arousal, self.valence]

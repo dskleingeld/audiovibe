@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
 from ..extract.features import Features
 from .emotion import Emotion
 
@@ -19,6 +19,7 @@ class Row:
 
     @staticmethod
     def deserializable(data: str):
+        print(data)
         fields = data.split(",")
         floats = [float(e) for e in fields]
         features = Features(*floats[:10])
@@ -29,19 +30,9 @@ class Row:
         return Row(features, emotion)
 
     def serializable(self) -> str:
-
-        data = [self.features.pitch,
-                self.features.spectral_rolloff,
-                self.features.mel_freq_c_coeff,
-                self.features.tempo,
-                self.features.rms_eng,
-                self.features.spect_centr,
-                self.features.beat_spec,
-                self.features.zero_crossing,
-                self.features.short_fft,
-                self.features.kurtosis]
+        data = self.features.as_list()
         if self.emotion is not None:
-            data.append(self.emotion.test)
+            data.extend(self.emotion.as_list())
 
         data = [str(e) for e in data]
         return ",".join(data)
@@ -60,11 +51,31 @@ class Database:
         print(type(db))
         return Database(db)
 
-    def add(self, key: str, value: Row):
+    def insert(self, key: str, value: Row):
         assert isinstance(value, Row)
         data = value.serializable()
         self.db.set(key, data)
 
     def get(self, key: str) -> Row:
         data = self.db.get(key)
+        assert data is not False, f"key: \'{key}\' not in database"
         return Row.deserializable(data)
+
+    def contains(self, key: str) -> bool:
+        value = self.db.get(key)
+        return value is not False
+
+    def set_emotion(self, key: str, emotion: Emotion):
+        assert isinstance(emotion, Emotion)
+        row = self.get(key)
+        row.emotion = emotion
+        self.insert(key, row)
+
+    def get_with_emotion(self) -> List[Row]:
+        list = []
+        for key in self.db.getall():
+            row = self.db.get(key)
+            if row.emotion is None:
+                continue
+            list.append(row)
+        return list
