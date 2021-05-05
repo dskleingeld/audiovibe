@@ -22,7 +22,7 @@ def mel_freq_c_coeff(samples: Samples) -> float:
 
 def tempo(samples: Samples) -> float:
     tempo = librosa.beat.tempo(samples.data, samples.rate)
-    return tempo
+    return tempo[0]
 
 
 def rms_eng(samples: Samples) -> float:
