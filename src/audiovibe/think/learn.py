@@ -31,10 +31,9 @@ def build_model():
     return model
 
 
-def prepare_data(data: List[Row]):
-    TRAIN_FRACTION = 0.8
+def prepare_data(data: List[Row], train_fraction: float):
     random.seed(0)  # need repeatability to compare nn
-    needed = int(len(data)*TRAIN_FRACTION)
+    needed = int(len(data)*train_fraction)
     train_idxs = random.sample(range(0, len(data)), needed)
     train_idxs.sort(reverse=True)
 
@@ -84,9 +83,9 @@ def store_model_info(model, hist):
             model.summary()
 
 
-def train(db: Database):
+def try_model(db: Database, base_model):
     data = db.get_with_emotion()
-    train_in, train_out, val_in, val_out = prepare_data(data)
+    train_in, train_out, val_in, val_out = prepare_data(data, 0.8)
     logger.info(f"training on: {len(train_in)} samples")
 
     TRIES = 10
@@ -94,7 +93,7 @@ def train(db: Database):
     best_model = None
     best_hist = None
     for i in tqdm(range(0, TRIES)):
-        model = build_model()
+        model = keras.models.clone_model(base_model)
         hist = model.fit(train_in, train_out, epochs=100, verbose=0,
                          validation_data=(val_in, val_out))
         loss = hist.history['val_loss'][-1]
@@ -105,3 +104,10 @@ def train(db: Database):
 
     store_model_info(best_model, best_hist)
     logger.info(f"best loss reached: {best_loss}")
+
+
+def train_final_model(db: Database, model):
+    data = db.get_with_emotion()
+    train_in, train_out, val_in, val_out = prepare_data(data, 1)
+    model.fit(train_in, train_out, epochs=100)
+    model.save("final_model.tf")

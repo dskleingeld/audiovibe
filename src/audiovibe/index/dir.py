@@ -43,10 +43,14 @@ def add_emotion_from_csv(db: Database, csv: str):
        std_arousal,mean_valence,std_valence"""
 
     data = np.loadtxt(csv, delimiter=",", skiprows=1)
-    for song in data:
-        name = str(int(song[0]))+".mp3"
-        arousal = song[1]
-        valence = song[3]
+    def norm(x): return (x-x.min()) / (x.max() - x.min())
+
+    ids = data[:, 0]
+    arousals = norm(data[:, 1])
+    valences = norm(data[:, 3])
+
+    for id, arousal, valence in zip(ids, arousals, valences):
+        name = str(int(id))+".mp3"
 
         emotion = Emotion(arousal, valence)
         db.set_emotion(name, emotion)

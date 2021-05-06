@@ -5,7 +5,7 @@ from ..index.emotion import Emotion
 
 
 def load_model():
-    BEST_MODEL = "models_tried/model25.tf"
+    BEST_MODEL = "final_model.tf"
     return keras.models.load_model(BEST_MODEL, compile=True)
 
 
@@ -14,5 +14,4 @@ def predict(model, features: Features) -> Emotion:
     input = np.array([input])
     out = model.predict(input)[0]
 
-    print(out)
     return Emotion(out[0], out[1])
