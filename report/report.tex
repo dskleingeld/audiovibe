@@ -1,0 +1,63 @@
+\documentclass[lang=en, hanging-titles=true]{skrapport}
+
+\usepackage[backend=biber]{biblatex}
+\addbibresource{References.bib}
+
+\usepackage[hidelinks]{hyperref}
+\usepackage{graphicx} % allow embedded images
+  \setkeys{Gin}{width=\linewidth,totalheight=\textheight,keepaspectratio}
+  \graphicspath{{../figs/}} % set of paths to search for images
+\usepackage{ragged2e}
+\usepackage{ctable}
+\usepackage{cleveref}
+
+\raggedright
+\colortheme{skdoc}
+\title{Indexing Mood}
+\author[dskleingeld@gmail.com]{David Kleingeld}
+
+
+\begin{document}
+
+%\begin{titlepage}
+\maketitle
+\tableofcontents
+%\end{titlepage}
+
+\section{Introduction}
+Music can evoke strong emotions when listened too. Many people like to select music based on their current mood. The field of music emotion recognition (MER) tries to find a way to predict the emotion a musical piece will evoke. Building on existing methods I present and evaluate a system to index the emotion or mood of a musical piece.
+
+A musical piece, being an audio signal, is stored as a list of intensities for each timestamp. We can transform this into different representations such as intensity for variouse frequencies. We can reduce these representations into something 'simpler', a sound feature, such as \textit{the average pitch} of a song. These features can tell us things about a song. Intuitively a song with a high \textit{pitch} and \textit{high beats per minute (bpm)} is more anxiouse then one with low \textit{high} and \textit{bmp}. A few features however are not enough, we need some nuance, for example Vivaldi's Summer contains quite some high bpm high pitch fragments however no one would call these anxiouse. To solve this we use 10 different sound features. Instead of constructing rules based on ituition a neural network may fit the features to emotions. To teach it we use samples from the \textit{1000 Songs for Emotional Analysis of Music}\cite{dataset} dataset.
+
+The dataset contained annotations in the valence arousal model. In this model every emotion is a combination of \textit{Valence}, positive versus negative emotion and \textit{Arousal} the emotions intensity. It is often represented as a continues 2 dimensional space\footnote{In reality this is more of a 1-d space as only the angle between valence and arousal seems to matter} as seen in \cref{fig:model}. The dataset used this model as it allowed rating songs in reference to other songs.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.75\linewidth]{figs/model}
+	\caption{A visual mapping between dircreet emotions and valence-arousal space}
+	\label{fig:model}
+\end{figure}
+
+In the next section I will explain my implementation; introducing the used audio features, neural network architecture and going through the audio pipeline. Then I will go over the results, that is: the neural networks testing accuracy and the my own personal judgement listening to samples. Finally I will conclude weather this effort was succesfull and what improvements can be made in future work.
+
+\section{Implementation}
+% list features used
+% explain neural net arch
+\section{Results}
+% neural net val score
+% actual listening
+\section{Conclusion}
+% emtions do not match valaence/arousal
+% future work
+% - https://multimediaeval.github.io/editions/2020/tasks/music/
+
+\clearpage
+\appendix
+\section{Run Instructions}
+% TODO
+\printbibliography
+
+\end{document}
+
+\pagestyle{scrheadings} % Show chapter titles as headings
+\cleardoublepage % Avoids problems with pdfbookmark
