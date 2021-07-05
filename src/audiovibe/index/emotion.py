@@ -9,7 +9,7 @@ def find_nearest(array, value):
     return idx
 
 
-@dataclass
+@dataclass(repr=False)
 class Emotion:
     arousal: float
     valence: float
@@ -41,3 +41,11 @@ class Emotion:
 
         idx = find_nearest(ANGLE_TO_IDX, angle)
         return IDX_TO_EMOTION[idx]
+
+        def print(self):
+            return f"{self.__name}"
+            +f"\n(arousal={self.arousal-0.5} valence={self.valence-0.5})"
+            +f"\nname= {self.as_word()}"
+
+        def __repr__(self):
+            return self.__str__()
