@@ -10,6 +10,7 @@
 \usepackage{ragged2e}
 \usepackage{ctable}
 \usepackage{cleveref}
+\usepackage{multicol}
 
 \raggedright
 \colortheme{skdoc}
@@ -41,13 +42,42 @@ The dataset contained annotations in the valence arousal model. In this model ev
 In the next section I will explain my implementation; introducing the used audio features, neural network architecture and going through the audio pipeline. Then I will go over the results, that is: the neural networks testing accuracy and the my own personal judgement listening to samples. Finally I will conclude weather this effort was succesfull and what improvements can be made in future work.
 
 \section{Implementation}
-% list features used
-% explain neural net arch
+The audio features are the cornerstone of this implementation, I base my choice of features on the findings of Shlok Gilda et al\cite{features}. They use recursive feature elimination to reduce a large amount of candidates based on other established emotion recognition work to 11 features. From these I pick the 10 that where reproducible given high level libaries. These are:
+
+\begin{multicols}{2}
+\begin{enumerate}
+	\item Pitch
+	\item Spectral Rolloff
+	\item Mel Frequency Coefficents
+	\item Tempo
+	\item Root Mean Square Energy
+	\item Spectral Centroid
+	\item Beat Spectrum
+	\item Zero Crossing Rate
+	\item Short FFT
+	\item Kurtosis
+\end{enumerate}
+\end{multicols}
+
+Many of these features are sufficiently complicated that they need a paper on their own. Thus I will only focus on how these are used to get to a single feature vector for each song. For the feature extraction we rely on the \textit{librosa} pyhon library \cite{librosa}. Excluding tempo all feature are either continues or return a sequence. I simply take the average over a 45s sample of audio. 
+
+The feature vector, a list of numbers, is fed into the neural network. The it maps the features to a valance and an arousal. These are then mapped to an emotion following the model in \cref{fig:model}. I use a fully connected network with 3 hidden layers, two with 10 nodes and one with 5, see \cref{fig:nn}. All layers except the output use \textit{relu} as activation. For the output I use a linear activation\footnote{as the valence-arousal model does not restrict values between zero and one and we do not want to bias to zero and one}.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\linewidth]{figs/nn}
+	\caption{Neural network architecture used to map features to valance arousal space}
+	\label{fig:nn}
+\end{figure}
+
+The feature extraction works on the raw audio samples, it can not handle stereo or compensate for different sampling rates. To prevent the results dissapointing after deployment each song is converted to mono and resampled to $44.1$khz.
+
 \section{Results}
 % neural net val score
 % actual listening
 \section{Conclusion}
 % emtions do not match valaence/arousal
+% neural net probaly overfits
 % future work
 % - https://multimediaeval.github.io/editions/2020/tasks/music/
 
