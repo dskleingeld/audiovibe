@@ -21,31 +21,42 @@ class Emotion:
     def empty(placeholder=0):
         return Emotion(placeholder, placeholder)
 
-    def as_word(self) -> str:
-        # TODO
+    def angle(self) -> float:
         x = self.valence - 0.5
         y = self.arousal - 0.5
-        angle = math.atan2(y, x)/math.pi*180  # in degees
+        angle_rel_x_axis = math.atan2(y, x)/math.pi*180
+        return angle_rel_x_axis
 
-        ANGLE_TO_IDX = [30, 60, 120, 150, 210, 250, 290, 330]
+    def weight(self) -> float:
+        return abs(self.valence) + abs(self.arousal)
+
+    def as_word(self) -> str:
+        ANGLE = [15, 40, 65, 115, 140, 160, ]
+        ANGLE_TO_IDX = ANGLE
+        ANGLE_TO_IDX.extend([-a for a in ANGLE])
         IDX_TO_EMOTION = [
-            "excited",
-            "happy",
-            "content",
-            "calm",
-            "depressed",
-            "sad",
-            "afraid",
-            "angry",
+            "Happy",
+            "Delighted",
+            "Excited",
+            "Tense",
+            "Angry",
+            "Frustrated",
+            "Content",
+            "Relaxed",
+            "Calm",
+            "Tired",
+            "Bored",
+            "Depressed",
         ]
 
-        idx = find_nearest(ANGLE_TO_IDX, angle)
+        idx = find_nearest(ANGLE_TO_IDX, self.angle())
         return IDX_TO_EMOTION[idx]
 
     def __str__(self):
         return (f"{self.__class__.__name__}("
-                + f"{self.as_word()}, "
-                + f"arousal: {self.arousal-0.5}, valence: {self.valence-0.5})")
+                + f"{self.as_word()}, angle: {self.angle()}, "
+                + f"arousal: {self.arousal-0.5}, valence: {self.valence-0.5}, "
+                + f"weight: {self.weight()})")
 
     def __repr__(self):
         return self.__str__()
