@@ -28,7 +28,7 @@ class Emotion:
         return angle_rel_x_axis
 
     def weight(self) -> float:
-        return abs(self.valence) + abs(self.arousal)
+        return abs(self.valence-0.5) + abs(self.arousal-0.5)
 
     def as_word(self) -> str:
         ANGLE = [15, 40, 65, 115, 140, 160, ]
