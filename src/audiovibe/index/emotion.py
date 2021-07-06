@@ -42,10 +42,10 @@ class Emotion:
         idx = find_nearest(ANGLE_TO_IDX, angle)
         return IDX_TO_EMOTION[idx]
 
-        def print(self):
-            return f"{self.__name}"
-            +f"\n(arousal={self.arousal-0.5} valence={self.valence-0.5})"
-            +f"\nname= {self.as_word()}"
+    def __str__(self):
+        return (f"{self.__class__.__name__}("
+                + f"{self.as_word()}, "
+                + f"arousal: {self.arousal-0.5}, valence: {self.valence-0.5})")
 
-        def __repr__(self):
-            return self.__str__()
+    def __repr__(self):
+        return self.__str__()
