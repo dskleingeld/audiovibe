@@ -1,9 +1,8 @@
 librosa~=0.8.0
 numpy~=1.19.5
-aubio~=0.4.9
-scipy~=1.4.1
+scipy
 pickledb~=0.9.2
 loguru~=0.5.3
 tqdm>=4.42.0
-tensorflow~=2.4.1
+tensorflow~=2.4
 matplotlib~=3.2.1
