@@ -11,6 +11,7 @@
 \usepackage{ctable}
 \usepackage{cleveref}
 \usepackage{multicol}
+\usepackage{csquotes}
 
 \raggedright
 \colortheme{skdoc}
@@ -39,7 +40,7 @@ The dataset contained annotations in the valence arousal model. In this model ev
 	\label{fig:model}
 \end{figure}
 
-In the next section I will explain my implementation; introducing the used audio features, neural network architecture and going through the audio pipeline. Then I will go over the results, that is: the neural networks testing accuracy and the my own personal judgement listening to samples. Finally I will conclude weather this effort was succesfull and what improvements can be made in future work.
+In the next section I will explain my implementation; introducing the used audio features, neural network architecture and going through the audio pipeline. Then I will go over the results, that is: the neural networks accuracy and the my own personal judgement listening to samples. Finally I will conclude weather this effort was succesfull and what improvements can be made in future work.
 
 \section{Implementation}
 The audio features are the cornerstone of this implementation, I base my choice of features on the findings of Shlok Gilda et al\cite{features}. They use recursive feature elimination to reduce a large amount of candidates based on other established emotion recognition work to 11 features. From these I pick the 10 that where reproducible given high level libaries. These are:
@@ -61,7 +62,7 @@ The audio features are the cornerstone of this implementation, I base my choice 
 
 Many of these features are sufficiently complicated that they need a paper on their own. Thus I will only focus on how these are used to get to a single feature vector for each song. For the feature extraction we rely on the \textit{librosa} pyhon library \cite{librosa}. Excluding tempo all feature are either continues or return a sequence. I simply take the average over a 45s sample of audio. 
 
-The feature vector, a list of numbers, is fed into the neural network. The it maps the features to a valance and an arousal. These are then mapped to an emotion following the model in \cref{fig:model}. I use a fully connected network with 3 hidden layers, two with 10 nodes and one with 5, see \cref{fig:nn}. All layers except the output use \textit{relu} as activation. For the output I use a linear activation\footnote{as the valence-arousal model does not restrict values between zero and one and we do not want to bias to zero and one}.
+The feature vector, a list of numbers, is fed into the neural network. The it maps the features to a valance and an arousal. These are then mapped to an emotion following the model in \cref{fig:model}. After testing multiple model I settled on a fully connected network with 3 hidden layers, two with 10 nodes and one with 5, see \cref{fig:nn}. All layers except the output use \textit{relu} as activation. For the output I use a linear activation\footnote{as the valence-arousal model does not restrict values between zero and one and we do not want to bias to zero and one}. The loss function used is the Mean Absolute Error as valance and arousal are two distinct dimensions. To find the best model the candidates where trained for 100 epochs using 20\% of the data for validation. The final network is trained on all the data for the number of epochs as the loss validation stays around the training validation during model selection.
 
 \begin{figure}[h]
 	\centering
@@ -70,21 +71,63 @@ The feature vector, a list of numbers, is fed into the neural network. The it ma
 	\label{fig:nn}
 \end{figure}
 
-The feature extraction works on the raw audio samples, it can not handle stereo or compensate for different sampling rates. To prevent the results dissapointing after deployment each song is converted to mono and resampled to $44.1$khz.
+The feature extraction works on the raw audio samples, it can not handle stereo or compensate for different sampling rates. To prevent the results dissapointing after deployment each song is converted to mono and resampled to $44.1$khz. Each song is also reduced to a 45s segment starting 10 seconds from the begin of the file.
 
 \section{Results}
-% neural net val score
-% actual listening
+One way to evaluate the emotion estimation is by looking at the performance of the validation set during model selection. As the validation data is randomly sampled from the dataset it should give a good estimate of eventual performance without suffering of overfitting. We see the performance as measured by the loss function in \cref{fig:loss}. Initally the validation loss is significantly lower then the training loss this shows the validation data is easier to 'classify' then the training data. The chance of this happening on a randomly selected dataset is very small. We see the networks performance improves up to about 50 epochs without any signs of overfitting. 
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.75\linewidth]{figs/loss}
+	\caption{"Training and Validation loss of the chosen model, notice how the validation data has a lower loss at the start"}
+	\label{fig:loss}
+\end{figure}
+
+How many songs are classified correctly if the classification problem is turned into a regression problem?. The neural network gives us mean absolute error as loss, defined as: 
+\begin{equation*}
+	\frac{(valence_{true} - valence_{predicted})^2 + (arousal_{true} - arousal_{predicted})^2}{2}
+\end{equation*}
+This tells us how close the predicted valence and arousal are to the data. They predicted values can be far off from the truth however if the ratios are close the detected emotion might still be the same. The loss of the neural network on the complete dataset was 12\%, that is the valance and arousal deviated 12\% from the dataset annotations.
+
+A better way to check if the network functions is to spot check samples outside of the dataset. For this I will use two audio samples in the public domain: the first movement of Beethovens \textit{Moonlight Sonate}\footnote{see: https://youtu.be/4Tr0otuiQuU?t=10} which I would classify as content and Vivaldi's \textit{Storm}\footnote{see: https://youtu.be/NqAOGduIFbg?t=10} which I classify as Tense. I also take the top hit on youtube for \textit{relaxing music}\footnote{see: https://youtu.be/1ZYbU82GVz4?t=10} ($283\cdot10^6$ views). These results are in \cref{tab:results}.
+
+\ctable[
+	caption = Emotion estimations for hand picked songs,
+	label = tab:results,
+	pos = h,
+]{llccc}{
+	\tnote[a]{full name: \textit{Relaxing Sleep Music • Deep Sleeping Music, Relaxing Music, Stress Relief, Meditation Music (Flying)}}
+}{
+\FL
+Song                    & Estimate & weight & \multicolumn{2}{c}{Neuralnet output}  \ML
+                        &          &        & arousal                                   & valence \ML
+Moonlight Sonate        & Tired    & 0.58   & -0.34                                     & -0.23 \NN
+Storm                   & Content  & 0.10   & -0.016                                    & 0.08 \NN
+Relaxing music\tmark[a] & Tired    & 0.56   & -0.32                                     & -0.24 \ML
+}
+
+We see \textit{Storm} is completly misclassified\footnote{If you switch the values for valance and arousal here you get a plausible classification of Frustrated. I carefully checked the codebase for any mistaken switching and found none.}. We combine the arousal and valence into a weight by adding their absolute values. This probably indicate how certain the neuralnet is. It five times higher for the other two songs. Those are also classified better, still misclassified as Tired however Tired and Relaxed are quite close in my opinion.
+
 \section{Conclusion}
-% emtions do not match valaence/arousal
-% neural net probaly overfits
-% future work
-% - https://multimediaeval.github.io/editions/2020/tasks/music/
+I build a system that estimates the emotion or mood of a musical piece. It performs well on the relatively small dataset but fails to generalize as seen with a quick test. The dataset only contains 1000 songs, from these I take only a single 45 second fragment. The small dataset is not enough to generalize even without overfitting. Even then regression problem for the neural network can be improved, instead of a seprate valance and arousal it could return an angle within the valance arousal model. This could further improve the neural nets output. The choice for valance arousal was made because of the availability of annotated data it might not be the right choice for emotion prediction. Lisa Feldman Barrett\cite{feldman} notes:
+
+\blockquote{
+A careful read of the literature reveals that no theory has ever hypothesized that emotions can sufficiently be reduced to or explained by valence and arousal. Instead, these theories hypothesize that valence and arousal are important (and perhaps necessary) descriptive features of all emotions.
+}
+
+Going from audio features through arousal and valance to get to emotions is throwing away information. A neural network classifying emotions directly instead of regressing to arousal and valance is going to perform better. Further more we should ask if we want to know the emotion of a song and not some other description. I rarely find myself looking for music with a specific emotion. Rather one might want \textit{energetic} and \textit{rough} music when feeling angry and \textit{calm smooth} music when tired. These are descriptions that intuitivly map to certain audio features.
+
+Mapping to descriptions seems to be the way the state of the art is developing\footnote{Which I only found out while writing this conclusion}. New far larger datasets are now availible with over 18-thousand songs annotated with 56 moods and themes annotations including descriptions such as \textit{uplifting} and \textit{meditative}\cite{themes}. There has been a declining intrest in emotion recognition since 2014 the inclusion or switch to theme recognition could very well bring this around.
 
 \clearpage
 \appendix
 \section{Run Instructions}
-% TODO
+\subsection*{Install}
+To install you will need: make, python version 3.7 or higher and a installation of pip for that python. Then run \textit{make install} from the projects root. This assumes these versions of pip and python are called using pip3 and python3. You might need to change this and loossen versions in requirements.txt depending on what is availible for your installed python. To pervent messing with your current python envirement I recommand doing this in a virtual env.
+
+\subsection*{Use}
+The project download comes with the trained model and annotations database, ready to be used for emotion estimation. To estimate a songs emotion change the variable \texttt{path} in \texttt{estemate.py} to the location of the song for which you wish to estimate the emotion and call it using \textit{python3 /src/audiovibe/estimate.py}. You may wish to use \textit{test/cut45.sh} to cut songs to a 45 second segement (requires ffmpeg).
+
 \printbibliography
 
 \end{document}
