@@ -12,7 +12,7 @@ instead of a separate valance and arousal the angle between them could
 be the networks prediction. The choice for valance arousal was made
 because of the availability of annotated data it might not be the right
 choice for emotion prediction. Professor of psychology Lisa Feldman
-Barrett[@feldman] notes in her book on emotions:
+Barrett feldman notes in her book on emotions:
 
 > A careful read of the literature reveals that no theory has ever
 > hypothesized that emotions can sufficiently be reduced to or explained
